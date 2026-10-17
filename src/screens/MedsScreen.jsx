@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Check, ChevronLeft, ChevronRight, Clock, Lightbulb, Pause, Pencil, Pill, Play, Plus, Trash2, X } from 'lucide-react'
 import { useApp } from '../AppContext.js'
 import { Confirm, KebabMenu, ScreenHeader, Segmented, Sheet } from '../components/ui.jsx'
+import { MemberSwitcher } from '../components/Members.jsx'
 import { addDays, dosesForDay, formatWeekday, todayKey, toTimeStr, uid } from '../lib/health.js'
 
 const TIPS = [
@@ -14,7 +15,7 @@ const TIPS = [
 const emptyMed = () => ({ name: '', qty: '1 viên', purpose: '', times: ['08:00'], note: '' })
 
 export default function MedsScreen() {
-  const { meds, setMeds, intakes, toggleIntake, back, showToast } = useApp()
+  const { meds, setMeds, intakes, toggleIntake, back, showToast, activeMember } = useApp()
   const [tab, setTab] = useState('today')
   const [day, setDay] = useState(todayKey())
   const [editor, setEditor] = useState(null) // { mode: 'add'|'edit', data }
@@ -40,7 +41,7 @@ export default function MedsScreen() {
       setMeds((list) => list.map((m) => (m.id === data.id ? { ...m, ...data, sample: false } : m)))
       showToast('Đã cập nhật thuốc.')
     } else {
-      setMeds((list) => [...list, { ...data, id: uid(), active: true, createdAt: todayKey() }])
+      setMeds((list) => [...list, { ...data, id: uid(), memberId: activeMember.id, active: true, createdAt: todayKey() }])
       showToast('Đã thêm thuốc vào lịch nhắc.')
     }
     setEditor(null)
@@ -56,6 +57,7 @@ export default function MedsScreen() {
       <ScreenHeader title="Nhắc thuốc" onBack={back}
         right={<button className="btn btn-primary btn-sm" onClick={() => setEditor({ mode: 'add', data: emptyMed() })}><Plus size={16} /> Thêm thuốc</button>} />
 
+      <div className="member-bar"><MemberSwitcher compact /></div>
       <Segmented options={[['today', 'Hôm nay'], ['all', 'Tất cả thuốc']]} value={tab} onChange={setTab} variant="tabs wide" />
 
       {tab === 'today' ? (

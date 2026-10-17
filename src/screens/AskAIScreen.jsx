@@ -4,7 +4,7 @@ import { useApp } from '../AppContext.js'
 import { RichText, ScreenHeader, Sheet } from '../components/ui.jsx'
 import { DoctorAvatar } from '../components/Illustrations.jsx'
 import { SUGGESTED_QUESTIONS, askHealthAI } from '../lib/ai.js'
-import { formatDate, relativeDayLabel, todayKey, uid } from '../lib/health.js'
+import { GLUCOSE_CTX, formatDate, relativeDayLabel, todayKey, uid } from '../lib/health.js'
 
 /** Chuẩn hóa dữ liệu chat cũ (mảng tin nhắn) sang dạng danh sách cuộc trò chuyện */
 function normalize(chat) {
@@ -30,10 +30,11 @@ export default function AskAIScreen() {
 
   const context = useMemo(() => {
     if (!settings.shareReadingsWithAI) return ''
-    const r = sortedReadings.slice(0, 5).map((x) => `${formatDate(x.date)} ${x.time}: ${x.sys ? `HA ${x.sys}/${x.dia} mmHg, ` : ''}${x.pulse ? `mạch ${x.pulse} bpm, ` : ''}${x.weight ? `cân nặng ${x.weight} kg` : ''}`).join('\n')
+    const r = sortedReadings.slice(0, 5).map((x) => `${formatDate(x.date)} ${x.time}: ${x.sys ? `HA ${x.sys}/${x.dia} mmHg, ` : ''}${x.pulse ? `mạch ${x.pulse} bpm, ` : ''}${x.glucose ? `đường huyết ${x.glucose} mmol/L (${GLUCOSE_CTX[x.glucoseCtx] || 'bất kỳ'}), ` : ''}${x.weight ? `cân nặng ${x.weight} kg` : ''}`).join('\n')
     const age = profile.birthYear ? `Tuổi: ${new Date().getFullYear() - Number(profile.birthYear)}. ` : ''
     const h = profile.heightCm ? `Chiều cao: ${profile.heightCm} cm. ` : ''
-    return `${age}${h}\nCác chỉ số gần nhất:\n${r}`
+    const who = profile.relation ? `Người được hỏi: ${profile.relation}. ` : ''
+    return `${who}${age}${h}\nCác chỉ số gần nhất:\n${r}`
   }, [settings.shareReadingsWithAI, sortedReadings, profile])
 
   async function send(text) {

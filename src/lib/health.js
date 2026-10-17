@@ -36,6 +36,14 @@ export const relativeDayLabel = (key) => {
 export const sortReadings = (list) =>
   [...list].sort((a, b) => `${b.date} ${b.time}`.localeCompare(`${a.date} ${a.time}`))
 
+// ===== Thành viên gia đình =====
+export const DEFAULT_MEMBER_ID = 'member-default'
+export const MEMBER_COLORS = ['#15937f', '#e8743b', '#7a5cd6', '#2f8fd8', '#d64f7a', '#c99a1c']
+export const RELATIONS = ['Tôi', 'Vợ/Chồng', 'Bố', 'Mẹ', 'Ông', 'Bà', 'Con', 'Anh/Chị/Em', 'Khác']
+/** Dữ liệu cũ chưa có memberId được coi là của thành viên mặc định */
+export const memberOf = (item) => item?.memberId || DEFAULT_MEMBER_ID
+export const memberInitial = (m) => ((m?.name || m?.relation || 'T').trim()[0] || 'T').toUpperCase()
+
 // ===== Đánh giá chỉ số (thông tin tham khảo, không phải chẩn đoán) =====
 // Phân loại huyết áp theo khuyến cáo của Hội Tim mạch học Việt Nam / ESC.
 export function classifyBP(sys, dia) {
@@ -48,6 +56,28 @@ export function classifyBP(sys, dia) {
   if (s < 90 || d < 60) return { level: 'warn', label: 'Huyết áp thấp', advice: 'Huyết áp thấp. Nếu có chóng mặt, mệt lả, hãy nghỉ ngơi và hỏi ý kiến bác sĩ.' }
   if (s < 120 && d < 80) return { level: 'good', label: 'Tối ưu', advice: 'Huyết áp ở mức tốt.' }
   return { level: 'good', label: 'Bình thường', advice: 'Huyết áp trong giới hạn bình thường.' }
+}
+
+// Đường huyết (mmol/L) — ngưỡng tham khảo theo Hiệp hội Đái tháo đường Hoa Kỳ (ADA) cho người chưa được chẩn đoán.
+export const GLUCOSE_CTX = { fasting: 'Lúc đói', after: 'Sau ăn 2 giờ', random: 'Bất kỳ' }
+export function classifyGlucose(value, ctx = 'random') {
+  if (!value) return null
+  const v = Number(value)
+  if (v < 3.0) return { level: 'danger', label: 'Hạ đường huyết nặng', advice: 'Đường huyết rất thấp. Ăn/uống ngay đồ ngọt (nước đường, nước trái cây), đo lại sau 15 phút. Nếu lơ mơ, co giật: gọi cấp cứu 115.' }
+  if (v < 3.9) return { level: 'warn', label: 'Hạ đường huyết', advice: 'Đường huyết thấp. Hãy ăn hoặc uống chút đồ ngọt và đo lại sau 15 phút.' }
+  if (v >= 16.7) return { level: 'danger', label: 'Rất cao', advice: 'Đường huyết rất cao. Hãy uống nước, đo lại và liên hệ cơ sở y tế sớm, nhất là khi mệt lả, khát nhiều, buồn nôn.' }
+  if (ctx === 'fasting') {
+    if (v >= 7.0) return { level: 'high', label: 'Cao', advice: 'Đường huyết lúc đói cao. Trao đổi với bác sĩ nếu lặp lại nhiều lần.' }
+    if (v >= 5.6) return { level: 'warn', label: 'Hơi cao', advice: 'Đường huyết lúc đói hơi cao. Hạn chế đồ ngọt, tinh bột và theo dõi thêm.' }
+    return { level: 'good', label: 'Bình thường', advice: 'Đường huyết lúc đói trong giới hạn bình thường.' }
+  }
+  if (ctx === 'after') {
+    if (v >= 11.1) return { level: 'high', label: 'Cao', advice: 'Đường huyết sau ăn cao. Trao đổi với bác sĩ.' }
+    if (v >= 7.8) return { level: 'warn', label: 'Hơi cao', advice: 'Đường huyết sau ăn hơi cao. Theo dõi thêm.' }
+    return { level: 'good', label: 'Bình thường', advice: 'Đường huyết sau ăn trong giới hạn bình thường.' }
+  }
+  if (v >= 11.1) return { level: 'high', label: 'Cao', advice: 'Đường huyết cao. Hãy đo lại lúc đói và trao đổi với bác sĩ.' }
+  return { level: 'good', label: 'Trong giới hạn', advice: 'Đường huyết đo bất kỳ dưới 11,1 mmol/L.' }
 }
 
 export function classifyPulse(p) {
@@ -87,6 +117,7 @@ export function makeSampleData() {
       pulse: String(70 + ((k * 3) % 6)),
       weight: (62.4 + ((k * 13) % 5) / 10).toFixed(1),
       note: notes[k % notes.length],
+      ...(k % 4 === 0 ? { glucose: (5.2 + ((k * 3) % 8) / 10).toFixed(1), glucoseCtx: 'fasting' } : {}),
       sample: true,
     })
   }

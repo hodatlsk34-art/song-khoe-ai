@@ -38,6 +38,17 @@ Nếu nhiều lần đo đều ≥140/90 mmHg, bạn nên đi khám để đư�
 Mỗi người có nhu cầu khác nhau — hãy hỏi bác sĩ hoặc chuyên gia dinh dưỡng để có thực đơn phù hợp.`,
   },
   {
+    keys: ['đường huyết bao nhiêu', 'đường huyết bình thường', 'chỉ số đường huyết', 'đường huyết lúc đói', 'đường huyết sau ăn', 'hạ đường huyết', 'đo đường huyết'],
+    answer: `**Mức đường huyết tham khảo** (người chưa được chẩn đoán tiểu đường, đơn vị mmol/L):
+• Lúc đói (nhịn ăn ít nhất 8 giờ): bình thường dưới 5,6; từ 5,6–6,9 là rối loạn đường huyết lúc đói (tiền đái tháo đường); từ 7,0 trở lên là cao.
+• Sau ăn 2 giờ: bình thường dưới 7,8; từ 7,8–11,0 là hơi cao; từ 11,1 trở lên là cao.
+• Dưới 3,9 là **hạ đường huyết**: ăn hoặc uống ngay chút đồ ngọt (nước đường, nước trái cây), đo lại sau 15 phút.
+
+Đổi đơn vị: mg/dL ÷ 18 = mmol/L (ví dụ 126 mg/dL = 7,0 mmol/L).
+
+**Người đang điều trị tiểu đường** thường có mục tiêu riêng do bác sĩ đặt (hay gặp: lúc đói 4,4–7,2; sau ăn dưới 10). Chỉ bác sĩ mới chẩn đoán được tiểu đường dựa trên xét nghiệm.`,
+  },
+  {
     keys: ['tập thể dục', 'vận động', 'thể dục', 'đi bộ', 'tập luyện', 'chạy bộ', 'tập gym'],
     answer: `**Khuyến nghị vận động cho người trưởng thành (WHO):**
 • Ít nhất 150–300 phút/tuần vận động cường độ vừa (đi bộ nhanh, đạp xe, bơi), ví dụ 30 phút × 5 ngày.

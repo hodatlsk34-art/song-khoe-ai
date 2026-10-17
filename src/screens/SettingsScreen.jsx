@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bell, Download, FileSpreadsheet, Info, Palette, ShieldCheck, Sparkles, Trash2, Upload, User, Smartphone } from 'lucide-react'
+import { Bell, Users, Download, FileSpreadsheet, Info, Palette, ShieldCheck, Sparkles, Trash2, Upload, User, Smartphone } from 'lucide-react'
 import { useApp } from '../AppContext.js'
 import { Confirm, ScreenHeader, Switch } from '../components/ui.jsx'
+import { MemberManager, displayName } from '../components/Members.jsx'
 import { downloadFile } from '../lib/storage.js'
-import { calcBMI, sortReadings, todayKey } from '../lib/health.js'
+import { DEFAULT_MEMBER_ID, GLUCOSE_CTX, calcBMI, sortReadings, todayKey } from '../lib/health.js'
 
 export default function SettingsScreen() {
   const app = useApp()
-  const { profile, setProfile, settings, setSettings, readings, meds, intakes, chat, back, showToast, wipeAll, setReadings, setMeds, setIntakes, setChat, sortedReadings } = app
+  const { profile, setProfile, settings, setSettings, readings, allMeds: meds, intakes, chat, members, setMembers, activeMember, back, showToast, wipeAll, setReadings, setMeds, setIntakes, setChat, sortedReadings } = app
   const [confirm, setConfirm] = useState(null)
   const [aiStatus, setAiStatus] = useState('checking')
   const [installEvt, setInstallEvt] = useState(null)
@@ -35,14 +36,15 @@ export default function SettingsScreen() {
   }
 
   function exportJSON() {
-    const data = { app: 'song-khoe-ai', version: 1, exportedAt: new Date().toISOString(), readings, meds, intakes, chat, profile, settings }
+    const data = { app: 'song-khoe-ai', version: 2, exportedAt: new Date().toISOString(), readings, meds, intakes, chat, members, settings }
     downloadFile(`song-khoe-ai-sao-luu-${todayKey()}.json`, JSON.stringify(data, null, 2))
     showToast('Đã tải file sao lưu.')
   }
 
   function exportCSV() {
-    const rows = [['Ngày', 'Giờ', 'Tâm thu (mmHg)', 'Tâm trương (mmHg)', 'Nhịp tim (bpm)', 'Cân nặng (kg)', 'Ghi chú']]
-    sortReadings(readings).forEach((r) => rows.push([r.date, r.time, r.sys, r.dia, r.pulse, r.weight, r.note]))
+    const rows = [['Thành viên', 'Ngày', 'Giờ', 'Tâm thu (mmHg)', 'Tâm trương (mmHg)', 'Nhịp tim (bpm)', 'Đường huyết (mmol/L)', 'Thời điểm đo đường huyết', 'Cân nặng (kg)', 'Ghi chú']]
+    const nameOf = (id) => displayName(members.find((m) => m.id === (id || DEFAULT_MEMBER_ID)))
+    sortReadings(readings).forEach((r) => rows.push([nameOf(r.memberId), r.date, r.time, r.sys, r.dia, r.pulse, r.glucose, GLUCOSE_CTX[r.glucoseCtx] || '', r.weight, r.note]))
     const csv = '﻿' + rows.map((row) => row.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',')).join('\r\n')
     downloadFile(`chi-so-suc-khoe-${todayKey()}.csv`, csv, 'text/csv;charset=utf-8')
     showToast('Đã xuất file CSV (mở được bằng Excel).')
@@ -63,7 +65,8 @@ export default function SettingsScreen() {
           confirmText: 'Khôi phục',
           action: () => {
             setReadings(d.readings); setMeds(d.meds || []); setIntakes(d.intakes || {}); setChat(d.chat || [])
-            if (d.profile) setProfile(d.profile)
+            if (Array.isArray(d.members) && d.members.length) setMembers(d.members)
+            else if (d.profile) setProfile(d.profile)
             showToast('Đã khôi phục dữ liệu.')
           },
         })
@@ -84,13 +87,19 @@ export default function SettingsScreen() {
       <ScreenHeader title="Cài đặt" onBack={back} />
 
       <section className="card settings-group">
-        <h3><User size={18} /> Hồ sơ</h3>
+        <h3><User size={18} /> Hồ sơ của {displayName(activeMember)}</h3>
         <label>Tên gọi<input value={profile.name} maxLength={30} onChange={(e) => setProfile({ ...profile, name: e.target.value })} placeholder="Ví dụ: Lan" /></label>
         <div className="row-2">
           <label>Năm sinh<input type="number" inputMode="numeric" value={profile.birthYear} onChange={(e) => setProfile({ ...profile, birthYear: e.target.value })} placeholder="1965" /></label>
           <label>Chiều cao (cm)<input type="number" inputMode="numeric" value={profile.heightCm} onChange={(e) => setProfile({ ...profile, heightCm: e.target.value })} placeholder="158" /></label>
         </div>
         {bmi && <p className="hint">BMI hiện tại: <strong>{bmi.value}</strong> — <span className={`chip chip-${bmi.level}`}>{bmi.label}</span> (ngưỡng người châu Á)</p>}
+      </section>
+
+      <section className="card settings-group">
+        <h3><Users size={18} /> Thành viên gia đình</h3>
+        <p className="hint">Mỗi thành viên có chỉ số và lịch thuốc riêng. Chạm vào tên ở Trang chủ để chuyển người đang xem.</p>
+        <MemberManager />
       </section>
 
       <section className="card settings-group">
@@ -158,7 +167,7 @@ export default function SettingsScreen() {
       </section>
 
       <section className="about">
-        <strong>Sống Khỏe AI</strong> · Phiên bản 1.0.0
+        <strong>Sống Khỏe AI</strong> · Phiên bản 1.1.0
         <p>Ứng dụng hỗ trợ theo dõi sức khỏe cá nhân và gia đình. Thông tin trong ứng dụng chỉ mang tính tham khảo, không thay thế chẩn đoán và điều trị của bác sĩ. Khi có dấu hiệu cấp cứu, hãy gọi <strong>115</strong>.</p>
       </section>
 

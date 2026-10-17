@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AppContext } from './AppContext.js'
 import { loadData, saveData, clearAppData } from './lib/storage.js'
-import { makeSampleData, sortReadings, todayKey, toTimeStr, dosesForDay } from './lib/health.js'
+import { DEFAULT_MEMBER_ID, MEMBER_COLORS, memberOf, makeSampleData, sortReadings, todayKey, toTimeStr, dosesForDay } from './lib/health.js'
 import BottomNav from './components/BottomNav.jsx'
 import Toast from './components/Toast.jsx'
 import HomeScreen from './screens/HomeScreen.jsx'
@@ -29,7 +29,17 @@ export default function App() {
   const [meds, setMeds] = useState(init.meds)
   const [intakes, setIntakes] = useState(() => loadData('intakes', {}))
   const [chat, setChat] = useState(() => loadData('chat', []))
-  const [profile, setProfile] = useState(() => loadData('profile', { name: '', heightCm: '', birthYear: '' }))
+  // ===== Thành viên gia đình =====
+  const [members, setMembers] = useState(() => {
+    const saved = loadData('members', null)
+    if (saved && saved.length) return saved
+    const old = loadData('profile', { name: '', heightCm: '', birthYear: '' }) // chuyển hồ sơ cũ sang thành viên đầu tiên
+    return [{ id: DEFAULT_MEMBER_ID, name: old.name || '', relation: 'Tôi', heightCm: old.heightCm || '', birthYear: old.birthYear || '', color: MEMBER_COLORS[0] }]
+  })
+  const [activeMemberId, setActiveMemberId] = useState(() => loadData('activeMember', DEFAULT_MEMBER_ID))
+  const activeMember = members.find((m) => m.id === activeMemberId) || members[0]
+  const profile = activeMember
+  const setProfile = useCallback((next) => setMembers((list) => list.map((m) => (m.id === activeMember.id ? { ...m, ...next } : m))), [activeMember.id])
   const [settings, setSettings] = useState(() => loadData('settings', { notify: false, shareReadingsWithAI: false }))
   const [stack, setStack] = useState([{ name: 'home', params: {} }])
   const [toast, setToast] = useState(null)
@@ -39,7 +49,8 @@ export default function App() {
   useEffect(() => { saveData('meds', meds) }, [meds])
   useEffect(() => { saveData('intakes', intakes) }, [intakes])
   useEffect(() => { saveData('chat', chat) }, [chat])
-  useEffect(() => { saveData('profile', profile) }, [profile])
+  useEffect(() => { saveData('members', members) }, [members])
+  useEffect(() => { saveData('activeMember', activeMember.id) }, [activeMember.id])
   useEffect(() => { saveData('settings', settings) }, [settings])
 
   const current = stack[stack.length - 1]
@@ -88,7 +99,13 @@ export default function App() {
     return () => window.removeEventListener('popstate', popScreen)
   }, [popScreen])
 
-  const sortedReadings = useMemo(() => sortReadings(readings), [readings])
+  const mine = useCallback((item) => memberOf(item) === activeMember.id, [activeMember.id])
+  const sortedReadings = useMemo(() => sortReadings(readings.filter(mine)), [readings, mine])
+  const myMeds = useMemo(() => meds.filter(mine), [meds, mine])
+  const memberName = useCallback((id) => {
+    const m = members.find((x) => x.id === id)
+    return m ? (m.name || m.relation || 'Tôi') : ''
+  }, [members])
 
   // ===== Nhắc thuốc khi ứng dụng đang mở =====
   const notified = useRef(new Set())
@@ -101,8 +118,9 @@ export default function App() {
         const id = `${day}|${d.key}`
         if (d.time === now && !taken[d.key] && !notified.current.has(id)) {
           notified.current.add(id)
-          const body = `${d.med.name} · ${d.med.qty || ''} · ${d.time}`
-          showToast(`⏰ Đến giờ uống thuốc: ${d.med.name} (${d.time})`, 'info', 10000)
+          const who = members.length > 1 ? `${memberName(memberOf(d.med))}: ` : ''
+          const body = `${who}${d.med.name} · ${d.med.qty || ''} · ${d.time}`
+          showToast(`⏰ Đến giờ uống thuốc — ${who}${d.med.name} (${d.time})`, 'info', 10000)
           if (settings.notify && 'Notification' in window && Notification.permission === 'granted') {
             const opts = { body, icon: '/icon.svg', badge: '/icon.svg', tag: id }
             navigator.serviceWorker?.getRegistration().then((reg) => {
@@ -116,7 +134,7 @@ export default function App() {
     check()
     const timer = setInterval(check, 15000)
     return () => clearInterval(timer)
-  }, [meds, intakes, settings.notify, showToast])
+  }, [meds, intakes, settings.notify, showToast, members, memberName])
 
   const toggleIntake = useCallback((day, key) => {
     setIntakes((old) => {
@@ -131,13 +149,15 @@ export default function App() {
     clearAppData()
     saveData('initialized', true)
     setReadings([]); setMeds([]); setIntakes({}); setChat([])
-    setProfile({ name: '', heightCm: '', birthYear: '' })
+    setMembers([{ id: DEFAULT_MEMBER_ID, name: '', relation: 'Tôi', heightCm: '', birthYear: '', color: MEMBER_COLORS[0] }])
+    setActiveMemberId(DEFAULT_MEMBER_ID)
     setSettings({ notify: false, shareReadingsWithAI: false })
   }, [])
 
   const ctx = {
     readings, setReadings, sortedReadings,
-    meds, setMeds, intakes, setIntakes, toggleIntake,
+    meds: myMeds, allMeds: meds, setMeds, intakes,
+    members, setMembers, activeMember, setActiveMemberId, memberName, setIntakes, toggleIntake,
     chat, setChat, profile, setProfile, settings, setSettings,
     go, back, showToast, wipeAll, params: current.params,
   }

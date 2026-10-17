@@ -1,9 +1,10 @@
 import { useMemo } from 'react'
-import { Bell, CalendarCheck, ChevronRight, MessageCircle, Plus, Settings, StickyNote, Weight, Heart, HeartPulse, Pill } from 'lucide-react'
+import { Bell, CalendarCheck, ChevronRight, Droplet, MessageCircle, Plus, Settings, StickyNote, Weight, Heart, HeartPulse, Pill } from 'lucide-react'
 import { useApp } from '../AppContext.js'
 import { Logo } from '../components/ui.jsx'
 import { GreetingScene } from '../components/Illustrations.jsx'
-import { classifyBP, classifyPulse, dosesForDay, relativeDayLabel, todayKey } from '../lib/health.js'
+import { MemberSwitcher, displayName } from '../components/Members.jsx'
+import { GLUCOSE_CTX, classifyBP, classifyGlucose, classifyPulse, dosesForDay, relativeDayLabel, todayKey } from '../lib/health.js'
 
 function greeting() {
   const h = new Date().getHours()
@@ -14,10 +15,12 @@ function greeting() {
 }
 
 export default function HomeScreen() {
-  const { sortedReadings, meds, intakes, profile, go, setReadings, setMeds, showToast } = useApp()
+  const { sortedReadings, meds, intakes, profile, members, go, setReadings, setMeds, showToast } = useApp()
   const latestOf = (field) => sortedReadings.find((r) => r[field])
   const bp = latestOf('sys'), pulse = latestOf('pulse'), weight = latestOf('weight')
   const noteR = sortedReadings.find((r) => r.note)
+  const glu = latestOf('glucose')
+  const gluClass = glu && classifyGlucose(glu.glucose, glu.glucoseCtx)
   const newest = sortedReadings[0]
   const bpClass = bp && classifyBP(bp.sys, bp.dia)
   const pulseClass = pulse && classifyPulse(pulse.pulse)
@@ -53,6 +56,7 @@ export default function HomeScreen() {
         <div className="greeting-text">
           <h2>{profile.name ? `Chào ${profile.name}!` : 'Chào bạn!'}</h2>
           <p>{greeting()}, hôm nay bạn cảm thấy thế nào?</p>
+          <div className="greeting-member"><MemberSwitcher /></div>
         </div>
       </section>
 
@@ -95,14 +99,21 @@ export default function HomeScreen() {
             <span className="metric-unit">kg</span>
           </div>
         </button>
-        <button className="metric-card" onClick={() => go('history')}>
-          <span className="metric-icon yellow"><StickyNote size={18} /></span>
+        <button className="metric-card" onClick={() => go('history', { tab: 'glucose' })}>
+          <span className="metric-icon purple"><Droplet size={18} /></span>
           <div className="metric-body">
-            <span className="metric-label">Ghi chú</span>
-            <span className="metric-note">{noteR ? noteR.note : 'Chưa có ghi chú'}</span>
+            <span className="metric-label">Đường huyết</span>
+            <strong className="metric-value">{glu ? glu.glucose : '--'}</strong>
+            <span className="metric-unit">mmol/L{glu ? ` · ${GLUCOSE_CTX[glu.glucoseCtx] || ''}` : ''}</span>
+            {gluClass && <span className={`chip chip-${gluClass.level}`}>{gluClass.label}</span>}
           </div>
         </button>
       </section>
+
+      <button className="note-strip" onClick={() => go('history')}>
+        <span className="metric-icon yellow"><StickyNote size={18} /></span>
+        <span><small>Ghi chú</small>{noteR ? noteR.note : 'Chưa có ghi chú'}</span>
+      </button>
 
       <button className="btn btn-primary btn-block btn-lg" onClick={() => go('add')}>
         <Plus size={20} /> Nhập chỉ số mới
