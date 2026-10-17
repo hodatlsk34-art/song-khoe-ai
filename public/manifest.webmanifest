@@ -1,0 +1,15 @@
+{
+  "name": "Sống Khỏe AI",
+  "short_name": "Sống Khỏe",
+  "description": "Đồng hành cùng sức khỏe gia đình: theo dõi chỉ số, nhắc thuốc, hỏi đáp sức khỏe.",
+  "lang": "vi",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6f8f8",
+  "theme_color": "#15937f",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
