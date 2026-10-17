@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bell, Download, FileSpreadsheet, Info, ShieldCheck, Sparkles, Trash2, Upload, User, Smartphone } from 'lucide-react'
+import { Bell, Download, FileSpreadsheet, Info, Palette, ShieldCheck, Sparkles, Trash2, Upload, User, Smartphone } from 'lucide-react'
 import { useApp } from '../AppContext.js'
 import { Confirm, ScreenHeader, Switch } from '../components/ui.jsx'
 import { downloadFile } from '../lib/storage.js'
@@ -91,6 +91,24 @@ export default function SettingsScreen() {
           <label>Chiều cao (cm)<input type="number" inputMode="numeric" value={profile.heightCm} onChange={(e) => setProfile({ ...profile, heightCm: e.target.value })} placeholder="158" /></label>
         </div>
         {bmi && <p className="hint">BMI hiện tại: <strong>{bmi.value}</strong> — <span className={`chip chip-${bmi.level}`}>{bmi.label}</span> (ngưỡng người châu Á)</p>}
+      </section>
+
+      <section className="card settings-group">
+        <h3><Palette size={18} /> Giao diện</h3>
+        <span className="setting-label">Chế độ màu</span>
+        <div className="theme-options" role="radiogroup" aria-label="Chế độ màu">
+          {[['auto', 'Theo máy'], ['light', 'Sáng'], ['dark', 'Tối']].map(([id, label]) => (
+            <button key={id} role="radio" aria-checked={(settings.theme || 'auto') === id} className={(settings.theme || 'auto') === id ? 'active' : ''}
+              onClick={() => setSettings({ ...settings, theme: id })}>{label}</button>
+          ))}
+        </div>
+        <span className="setting-label">Cỡ chữ</span>
+        <div className="theme-options" role="radiogroup" aria-label="Cỡ chữ">
+          {[['normal', 'Vừa'], ['large', 'Lớn'], ['xlarge', 'Rất lớn']].map(([id, label]) => (
+            <button key={id} role="radio" aria-checked={(settings.fontSize || 'normal') === id} className={(settings.fontSize || 'normal') === id ? 'active' : ''}
+              onClick={() => setSettings({ ...settings, fontSize: id })}>{label}</button>
+          ))}
+        </div>
       </section>
 
       <section className="card settings-group">

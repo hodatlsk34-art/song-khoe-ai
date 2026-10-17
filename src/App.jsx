@@ -44,6 +44,22 @@ export default function App() {
 
   const current = stack[stack.length - 1]
 
+  // ===== Giao diện sáng/tối =====
+  const [systemDark, setSystemDark] = useState(() => window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false)
+  useEffect(() => {
+    const mq = window.matchMedia?.('(prefers-color-scheme: dark)')
+    if (!mq) return
+    const on = (e) => setSystemDark(e.matches)
+    mq.addEventListener?.('change', on)
+    return () => mq.removeEventListener?.('change', on)
+  }, [])
+  const theme = settings.theme || 'auto'
+  const isDark = theme === 'dark' || (theme === 'auto' && systemDark)
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDark)
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', isDark ? '#111816' : '#14907f')
+  }, [isDark])
+
   const showToast = useCallback((message, type = 'success', duration = 3200) => {
     clearTimeout(toastTimer.current)
     setToast({ message, type, id: Date.now() })
@@ -134,7 +150,7 @@ export default function App() {
 
   return (
     <AppContext.Provider value={ctx}>
-      <div className="app">
+      <div className={`app font-${settings.fontSize || 'normal'}`}>
         <main className={`screen screen-${current.name}`} key={`${current.name}-${stack.length}`}>
           <Screen />
         </main>
