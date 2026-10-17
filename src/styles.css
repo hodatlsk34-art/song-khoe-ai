@@ -586,3 +586,20 @@ html.dark { --nav-ink: #d3dfdc; }
 html.dark .bottom-nav button.active { color: var(--primary); }
 .bottom-nav button.active svg { background: var(--primary-soft); }
 .bottom-nav button.active::before { display: none; }
+
+/* ----- Màu riêng cho từng mục menu ----- */
+.bottom-nav [data-tab="home"]     { --c: #0f9d84; --c-soft: rgba(15,157,132,.14); }
+.bottom-nav [data-tab="history"]  { --c: #ef4f5f; --c-soft: rgba(239,79,95,.13); }
+.bottom-nav [data-tab="meds"]     { --c: #f29a12; --c-soft: rgba(242,154,18,.15); }
+.bottom-nav [data-tab="ai"]       { --c: #1e9bd7; --c-soft: rgba(30,155,215,.14); }
+.bottom-nav [data-tab="settings"] { --c: #6d5bd0; --c-soft: rgba(109,91,208,.14); }
+html.dark .bottom-nav [data-tab="home"]     { --c: #34c9ad; }
+html.dark .bottom-nav [data-tab="history"]  { --c: #ff7a86; }
+html.dark .bottom-nav [data-tab="meds"]     { --c: #ffb547; }
+html.dark .bottom-nav [data-tab="ai"]       { --c: #5cc0f0; }
+html.dark .bottom-nav [data-tab="settings"] { --c: #a597f2; }
+html.dark .bottom-nav button { --c-soft: rgba(255,255,255,.08); }
+.bottom-nav button svg { color: var(--c); }
+.bottom-nav button.active { color: var(--c); }
+html.dark .bottom-nav button.active { color: var(--c); }
+.bottom-nav button.active svg { background: var(--c-soft); }
